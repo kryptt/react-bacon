@@ -31,10 +31,8 @@
     "gulp-util": "^3.0.6",
     "livescript": "^1.4.0"
   },
-  "dependencies": {
-    "baconjs": "^0.7.70"
-  },
   "peerDependencies": {
-    "react": "~0.13"
+    "react": "~0.13",
+    "baconjs": "^0.7.70"
   }
 }
