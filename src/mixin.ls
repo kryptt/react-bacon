@@ -34,9 +34,10 @@ module.exports =
   # similar to event-stream except we push {it.target.name : it.target.value} through.
   input-stream: (en) -> event-bus @, en, (bus) -> !-> bus.push (it |> event-obj)
   # similar to event-stream except we bother to prevent event propagation.
-  dom-event-stream: (en, prevent-default, stop-propagation) -> event-bus @, en, (bus) -> !->
-      it.prevent-default!  if !!prevent-default  and it.prevent-default?
-      it.stop-propagation! if !!stop-propagation and it.stop-propagation?
+  dom-event-stream: (en, prevent-default = true, stop-propagation = true) ->
+    event-bus @, en, (bus) -> !->
+      it.prevent-default!  if prevent-default  and it.prevent-default?
+      it.stop-propagation! if stop-propagation and it.stop-propagation?
       bus.push it
   # links the unsub function to the component's lifecycle.
   # unsub will be run in component-will-unmount.
