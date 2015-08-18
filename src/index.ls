@@ -1,5 +1,5 @@
-mixin    = require './mixin'
-resolver = require './resolver'
+mixin    = require \./mixin
+resolver = require \./resolver
 
 module.exports =
   BaconMixin    : mixin

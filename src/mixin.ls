@@ -1,4 +1,6 @@
-Bacon = require \baconjs
+Bacon    = require \baconjs
+React    = require \react
+Resolver = require \./resolver
 
 ensure-unsub = ->
   it._bacon ?= {}
@@ -19,36 +21,39 @@ event-bus = (it, name, generator) ->
   bus
 
 module.exports =
+  context-types:
+    resolver: React.PropTypes.instance-of Resolver
   # offer a bacon event stream for the component's properties.
-  stream-props : (pn) -> if pn? then ensure-props @ else ensure-props @ .map -> it[pn]
+  stream-props: (pn) -> if pn? then ensure-props @ else ensure-props @ .map -> it[pn]
   # offer a bacon event stream for the component's state.
-  stream-state : (sn) -> if sn? then ensure-state @ else ensure-state @ .map -> it[sn]
+  stream-state: (sn) -> if sn? then ensure-state @ else ensure-state @ .map -> it[sn]
   # register a callback hook and offer a stream on the other end of it.
-  event-stream : (en) -> event-bus @, en, (bus) -> !-> bus.push it
+  event-stream: (en) -> event-bus @, en, (bus) -> !-> bus.push it
   # similar to event-stream except we push it.target.value through the stream.
-  value-stream : (en) -> event-bus @, en, (bus) -> !-> bus.push it.target.value
+  value-stream: (en) -> event-bus @, en, (bus) -> !-> bus.push it.target.value
   # similar to event-stream except we push {it.target.name : it.target.value} through.
-  input-stream : (en) -> event-bus @, en, (bus) -> !-> bus.push (it |> event-obj)
+  input-stream: (en) -> event-bus @, en, (bus) -> !-> bus.push (it |> event-obj)
   # similar to event-stream except we bother to prevent event propagation.
-  dom-event-stream : (en, prevent-default, stop-propagation) -> event-bus @, en, (bus) -> !->
+  dom-event-stream: (en, prevent-default, stop-propagation) -> event-bus @, en, (bus) -> !->
       it.prevent-default!  if !!prevent-default  and it.prevent-default?
       it.stop-propagation! if !!stop-propagation and it.stop-propagation?
       bus.push it
   # links the unsub function to the component's lifecycle.
   # unsub will be run in component-will-unmount.
-  subscribe-to : (unsub) -> ensure-unsub @ .push unsub; unsub
+  subscribe-to: (unsub) -> ensure-unsub @ .push unsub; unsub
   # plugs a stream into the components state.
   # either under a specific key, or overriding the entire state object.
-  plug : (stream, key) ->
+  plug: (stream, key) ->
     @subscribe-to stream.on-value do
       if key? then !~> @set-state "#key": it else !~> @set-state it
+    @context.resolver?queue stream
   # push values to the props and state streams if they exist.
-  component-did-update : !->
+  component-did-update: !->
     if @_bacon?buses?
       @_bacon.buses.props?push @props
       @_bacon.buses.state?push @state
   # cleanup whenever the component unmounts.
-  component-will-unmount : !->
+  component-will-unmount: !->
     if @_bacon?
       if @_bacon.buses?
         for b of @_bacon.buses
