@@ -1,5 +1,7 @@
-var Bacon, ensureUnsub, ensureBuses, ensureProps, ensureState, eventObj, eventBus;
+var Bacon, React, Resolver, ensureUnsub, ensureBuses, ensureProps, ensureState, eventObj, eventBus;
 Bacon = require('baconjs');
+React = require('react');
+Resolver = require('./resolver');
 ensureUnsub = function(it){
   var ref$, ref1$;
   it._bacon == null && (it._bacon = {});
@@ -42,6 +44,9 @@ eventBus = function(it, name, generator){
   return bus;
 };
 module.exports = {
+  contextTypes: {
+    resolver: React.PropTypes.instanceOf(Resolver)
+  },
   streamProps: function(pn){
     if (pn != null) {
       return ensureProps(this);
@@ -100,8 +105,8 @@ module.exports = {
     return unsub;
   },
   plug: function(stream, key){
-    var this$ = this;
-    return this.subscribeTo(stream.onValue(key != null
+    var ref$, this$ = this;
+    this.subscribeTo(stream.onValue(key != null
       ? function(it){
         var ref$;
         this$.setState((ref$ = {}, ref$[key + ""] = it, ref$));
@@ -109,6 +114,7 @@ module.exports = {
       : function(it){
         this$.setState(it);
       }));
+    return (ref$ = this.context.resolver) != null ? ref$.queue(stream) : void 8;
   },
   componentDidUpdate: function(){
     var ref$, ref1$, ref2$;
