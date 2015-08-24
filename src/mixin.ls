@@ -22,7 +22,7 @@ event-bus = (it, name, generator) ->
 
 module.exports =
   context-types:
-    resolver: React.PropTypes.instance-of Resolver
+    resolver: React.PropTypes.instance-of(Resolver)
   # offer a bacon event stream for the component's properties.
   stream-props: (pn) -> if pn? then ensure-props @ else ensure-props @ .map -> it[pn]
   # offer a bacon event stream for the component's state.
@@ -45,9 +45,16 @@ module.exports =
   # plugs a stream into the components state.
   # either under a specific key, or overriding the entire state object.
   plug: (stream, key) ->
-    @subscribe-to stream.on-value do
-      if key? then !~> @set-state "#key": it else !~> @set-state it
     @context.resolver?queue stream
+    @subscribe-to stream.on-value ~>
+      if @_bacon?is-client
+        if key? then @set-state "#key": it else @set-state it
+      else
+        @state ?= {}
+        if key? then @state[key] = it else @state = it
+  component-did-mount: !->
+    @_bacon ?= {}
+    @_bacon.is-client = true
   # push values to the props and state streams if they exist.
   component-did-update: !->
     if @_bacon?buses?
