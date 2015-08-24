@@ -88,12 +88,14 @@ module.exports = {
     });
   },
   domEventStream: function(en, preventDefault, stopPropagation){
+    preventDefault == null && (preventDefault = true);
+    stopPropagation == null && (stopPropagation = true);
     return eventBus(this, en, function(bus){
       return function(it){
-        if (!!preventDefault && it.preventDefault != null) {
+        if (preventDefault && it.preventDefault != null) {
           it.preventDefault();
         }
-        if (!!stopPropagation && it.stopPropagation != null) {
+        if (stopPropagation && it.stopPropagation != null) {
           it.stopPropagation();
         }
         bus.push(it);
@@ -106,15 +108,30 @@ module.exports = {
   },
   plug: function(stream, key){
     var ref$, this$ = this;
-    this.subscribeTo(stream.onValue(key != null
-      ? function(it){
-        var ref$;
-        this$.setState((ref$ = {}, ref$[key + ""] = it, ref$));
+    if ((ref$ = this.context.resolver) != null) {
+      ref$.queue(stream);
+    }
+    return this.subscribeTo(stream.onValue(function(it){
+      var ref$, ref1$;
+      if ((ref$ = this$._bacon) != null && ref$.isClient) {
+        if (key != null) {
+          return this$.setState((ref1$ = {}, ref1$[key + ""] = it, ref1$));
+        } else {
+          return this$.setState(it);
+        }
+      } else {
+        this$.state == null && (this$.state = {});
+        if (key != null) {
+          return this$.state[key] = it;
+        } else {
+          return this$.state = it;
+        }
       }
-      : function(it){
-        this$.setState(it);
-      }));
-    return (ref$ = this.context.resolver) != null ? ref$.queue(stream) : void 8;
+    }));
+  },
+  componentDidMount: function(){
+    this._bacon == null && (this._bacon = {});
+    this._bacon.isClient = true;
   },
   componentDidUpdate: function(){
     var ref$, ref1$, ref2$;
